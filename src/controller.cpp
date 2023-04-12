@@ -9,14 +9,13 @@
 //
 
 
-#include "Adafruit_SH110X.h"
 #include "button.hpp"
-#include "ui.hpp"
+#include "uimanager.hpp"
 
-extern Adafruit_SH1107 display;
+extern DISPLAY_t display;
 extern Buttons buttons;
 extern Distance distance;
-extern UI ui;
+extern UIManager ui;
 
 extern queue_t results_queue;
 
@@ -47,11 +46,11 @@ void controller(bool active) {
             low_latency = true;
             count = 0;
             ui.start_page();
-            display.write("\nLow latency\n");
-            display.write("Display will turn off\n");
-            display.setTextSize(2);
-            display.write("Press any \nto revive");
-            display.display();
+            display.print("\nLow latency\n");
+            display.print("Display will turn off\n");
+            //display.setTextSize(2);
+            display.print("Press any \nto revive");
+            ui.commit();
             buttons.wait_up_off();
             return;
         }
@@ -67,8 +66,8 @@ void controller(bool active) {
         }
     }
     if (low_latency && (count++ >= COUNT_LIMIT)) {
-        display.clearDisplay();
-        display.display();
+        ui.clear();
+        ui.commit();
     }
 
     bool update = distance.get_distances(true);
@@ -77,7 +76,7 @@ void controller(bool active) {
         if (!low_latency) {
             if (active) ui.start_page();
             ui.display_values_giant();
-            display.display();
+            ui.commit();
         }
         if (distance.left() != old_distances[0]) {
             auto ent = distance.m_left();

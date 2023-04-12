@@ -10,91 +10,132 @@
 
 
 #include "calibration.hpp"
-#include "Adafruit_SH110X.h"
 #include "button.hpp"
 #include "distance.hpp"
-#include "ui.hpp"
+#include "uimanager.hpp"
 
-extern Adafruit_SH1107 display;
+extern DISPLAY_t display;
 extern Distance distance;
-extern UI ui;
+extern UIManager ui;
 
-void calibration(bool active) {
-    calibration_state state = START;
+namespace UI::Widgets {
+    template
+    class CalibrationWidget<DISPLAY_t>;
 
-    while (state != DONE) {
-        ui.buttons.read();
-        distance.get_distances(false);
-        if (active) ui.start_page();
-
+    template<typename D>
+    bool CalibrationWidget<D>::leftAction() { // left is up
+        if (!this->focus) return false;
         switch (state) {
-            case START: {
-                if (active) {
-                    if (ui.buttons.o()) {
-                        state = CLOSE_LEFT;
-                        break;
-                    }
-                    if (ui.buttons.up() || ui.buttons.down()) {
-                        ui.set_current_mode(MENU);
-                        return;
-                    }
-                }
-                display.setCursor(0, 8);
-                display.setTextSize(2);
-                display.write(active ? "Press O\n" : "\n");
-                ui.display_values();
-                display.display();
-                if (!active) return; // A nice goto
-                break;
-            }
             case CLOSE_LEFT:
-                if (ui.buttons.down()) {
-                    state = FAR_LEFT;
-                    distance.set_left_close();
-                }
-                display.setCursor(0, 8);
-                display.setTextSize(2);
-                display.write("Get Close\nPress \\/\n");
-                ui.display_value(0);
-                display.display();
                 break;
             case FAR_LEFT:
-                if (ui.buttons.up()) {
-                    state = CLOSE_RIGHT;
-                    distance.set_left_far();
-                }
-                display.setCursor(0, 8);
-                display.setTextSize(2);
-                display.write("Get Far\nPress /\\\n");
-                ui.display_value(0);
-                display.display();
+                state = CLOSE_RIGHT;
+                distance.set_left_far();
                 break;
             case CLOSE_RIGHT:
-                if (ui.buttons.down()) {
-                    state = FAR_RIGHT;
-                    distance.set_right_close();
-                }
-                display.setCursor(0, 8);
-                display.setTextSize(2);
-                display.write("Get Close\nPress \\/\n");
-                ui.display_value(1);
-                display.display();
                 break;
             case FAR_RIGHT:
-                if (ui.buttons.up()) {
-                    state = DONE;
-                    distance.set_right_far();
-                }
-                display.setCursor(0, 8);
-                display.setTextSize(2);
-                display.write("Get Far\nPress /\\\n");
+                state = DONE;
+                distance.set_right_far();
+                break;
+            case DONE:
+            case START:
+                this->setFocus(false);
+                this->exit();
+                ui.set_current_mode(CONTROLLER);
+                ui.buttons.wait_all_off();
+                break;
+        }
+        return true;
+    }
+
+    template<typename D>
+    bool CalibrationWidget<D>::rightAction() { // right is down
+        if (!this->focus) return false;
+        switch (state) {
+            case CLOSE_LEFT:
+                state = FAR_LEFT;
+                distance.set_left_close();
+                break;
+            case FAR_LEFT:
+                break;
+            case CLOSE_RIGHT:
+                state = FAR_RIGHT;
+                distance.set_right_close();
+                break;
+            case FAR_RIGHT:
+                break;
+            case DONE:
+            case START:
+                this->setFocus(false);
+                this->exit();
+                ui.set_current_mode(CONTROLLER);
+                ui.buttons.wait_all_off();
+                break;
+        }
+        return true;
+    }
+
+    template<typename D>
+    bool CalibrationWidget<D>::clickAction() {
+        if (!this->focus) return false;
+        switch (state) {
+            case START:
+                state = CLOSE_LEFT;
+                break;
+            case CLOSE_LEFT:
+                break;
+            case FAR_LEFT:
+                break;
+            case CLOSE_RIGHT:
+                break;
+            case FAR_RIGHT:
+                break;
+            case DONE:
+                this->setFocus(false);
+                this->exit();
+                ui.set_current_mode(CONTROLLER);
+                ui.buttons.wait_all_off();
+                break;
+        }
+        return true;
+    }
+
+    template<typename D>
+    void CalibrationWidget<D>::draw() {
+        distance.get_distances(false);
+        switch (state) {
+            case START:
+                display.setCursor(0, 16);
+                display.print(this->focus ? "Press O\n" : "\n");
+                ui.display_values();
+                break;
+            case CLOSE_LEFT:
+                display.setCursor(0, 16);
+                //display.setTextSize(2);
+                display.print("Get Close\nPress \\/\n");
+                ui.display_value(0);
+                break;
+            case FAR_LEFT:
+                display.setCursor(0, 16);
+                //display.setTextSize(2);
+                display.print("Get Far\nPress /\\\n");
+                ui.display_value(0);
+                break;
+            case CLOSE_RIGHT:
+                display.setCursor(0, 16);
+                //display.setTextSize(2);
+                display.print("Get Close\nPress \\/\n");
                 ui.display_value(1);
-                display.display();
+                break;
+            case FAR_RIGHT:
+                display.setCursor(0, 16);
+                //display.setTextSize(2);
+                display.print("Get Far\nPress /\\\n");
+                ui.display_value(1);
                 break;
             case DONE:
                 break;
         }
     }
-    ui.set_current_mode(CONTROLLER);
-    ui.buttons.wait_all_off();
 }

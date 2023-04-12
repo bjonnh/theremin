@@ -10,7 +10,6 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_SH110X.h>
 #include <vl53l4cd_class.h>
 #include "pico/util/queue.h"
 #include "config.hpp"
@@ -20,14 +19,18 @@
 #include "midi.hpp"
 #include "distance.hpp"
 #include "controller.hpp"
-#include "ui.hpp"
+#include "uimanager.hpp"
+#include "U8g2lib.h"
+#include "ui/ui.hpp"
 
-Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire1);
+
+U8G2_SH1107_64X128_F_2ND_HW_I2C display(U8G2_R3);
+
 VL53L4CD sensor_vl53l4cd_sat(&Wire1, PIN_DETECTOR_LEFT);
 VL53L4CD sensor_vl53l4cd_sat2(&Wire1, PIN_DETECTOR_RIGHT);
 Distance distance(sensor_vl53l4cd_sat, sensor_vl53l4cd_sat2);
 Buttons buttons;
-UI ui(display, distance, buttons);
+UIManager ui(reinterpret_cast<DISPLAY_t &> (display), distance, buttons);
 
 queue_t results_queue;
 
@@ -68,7 +71,8 @@ void loop1() {
 }
 
 void loop() {
-    buttons.read();
+    ui.update();
+    /*buttons.read();
     bool active = (ui.selected_mode == ui.current_mode) && (ui.selected_mode != MENU);
     if (ui.current_mode == MENU)
         ui.menu();
@@ -82,5 +86,5 @@ void loop() {
             break;
         case MENU:
             break;
-    }
+    }*/
 }

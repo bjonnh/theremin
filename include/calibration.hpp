@@ -11,9 +11,29 @@
 #ifndef THEREMIN_RP2040_CALIBRATION_HPP
 #define THEREMIN_RP2040_CALIBRATION_HPP
 
-enum calibration_state {
-    START, CLOSE_LEFT, FAR_LEFT, CLOSE_RIGHT, FAR_RIGHT, DONE
-};
+#include "ui/widget.hpp"
+
+namespace UI::Widgets {
+    template<typename D>
+    class CalibrationWidget : public UI::Widget<D> {
+        enum calibration_state {
+            START, CLOSE_LEFT, FAR_LEFT, CLOSE_RIGHT, FAR_RIGHT, DONE
+        };
+        calibration_state state = START;
+    public:
+        explicit CalibrationWidget(Widget<D> &parent) : Widget<D>(parent) {}
+        void draw() override;
+
+        bool clickAction() override;
+
+        bool leftAction() override;
+
+        bool rightAction() override;
+
+        bool active;
+    };
+}
+
 
 void calibration(bool b);
 
