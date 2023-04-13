@@ -9,27 +9,37 @@
 //
 
 #include "../include/uimanager.hpp"
-#include "modes.hpp"
 
-UIManager *current_manager;
+extern UIManager ui_manager;
+extern queue_t results_queue;
+
+UIManager::UIManager(DISPLAY_t &display, Distance &distance, Buttons &buttons) :
+        display(display), distance(distance),
+        buttons(buttons),
+        root(display),
+        main_menu(root),
+        page_calibration(root), calibration(page_calibration),
+        page_controller(root), controller(page_controller)
+{}
 
 void set_current_position(uint8_t position) {
-    current_manager->page_calibration.setVisible(position == 0);
+    ui_manager.page_calibration.setVisible(position == 0);
+    ui_manager.page_controller.setVisible(position == 1);
 }
 
 void enter_page(uint8_t position) {
-    current_manager->main_menu.setFocus(false);
-    current_manager->page_calibration.setFocus(position == 0);
+    ui_manager.main_menu.setFocus(false);
+    ui_manager.page_calibration.setFocus(position == 0);
+    ui_manager.page_controller.setFocus(position == 1);
 }
 
 void re_enter_menu() {
-    current_manager->page_calibration.setFocus(false);
-    current_manager->main_menu.setFocus(true);
+    ui_manager.page_calibration.setFocus(false);
+    ui_manager.page_controller.setFocus(false);
+    ui_manager.main_menu.setFocus(true);
 }
 
-
 void UIManager::init() {
-    current_manager = this;
     display.setBusClock(800000);
     display.begin();
     display.sendF("ca", 0x81, 0x4f);
@@ -46,91 +56,21 @@ void UIManager::init() {
 
     root.setVisible(true);
     main_menu.setVisible(true);
-    re_enter_menu();
-    main_menu.set_highlighted_item_to(0);
-    main_menu.set_selected_item_to(0);
 
     main_menu.addItem((char *) "Ctrl");
     main_menu.addItem((char *) "Calib");
     main_menu.addItem((char *) "Set");
     main_menu.onHighlightedCall(&set_current_position);
     main_menu.onSelectedCall(&enter_page);
+    re_enter_menu();
+    main_menu.set_highlighted_item_to(0);
+    main_menu.set_selected_item_to(0);
 
-  //  calibration.onExitCall(&re_enter_menu);
+
+    calibration.onExitCall(&re_enter_menu);
+    controller.onExitCall(&re_enter_menu);
 }
 
-void UIManager::start_page() {
-    return;
-    clear();
-
-    display.setCursor(0, 8);
-    //display.setTextSize(1);
-    switch (current_mode) {
-        case CALIBRATION:
-            display.print("Calibration");
-            break;
-        case CONTROLLER:
-            display.print("Controller");
-            break;
-        case MENU:
-            if (selected_mode==CALIBRATION)
-                display.setDrawColor(0);
-            else
-
-                display.setDrawColor(1);
-
-            display.print(" Calib. ");
-            if (selected_mode==CONTROLLER)
-                display.setDrawColor(0);
-            else
-                display.setDrawColor(1);
-            display.print(" Cont. ");
-            break;
-    }
-    display.setDrawColor(0);
-}
-
-void UIManager::set_current_mode(mode mode1) {
-    current_mode = mode1;
-    selected_mode = mode1;
-}
-
-void UIManager::menu() {
-    if (selected_mode==MENU) // We just entered the menu
-        selected_mode = CALIBRATION;
-    start_page();
-    if (buttons.up()) {
-        switch (selected_mode) {
-            case CALIBRATION:
-                break;
-            case CONTROLLER:
-                selected_mode = CALIBRATION;
-                break;
-            case MENU:
-                selected_mode = CONTROLLER;
-                break;
-        }
-        buttons.wait_up_off();
-    }
-    if (buttons.down()) {
-        switch (selected_mode) {
-            case CALIBRATION:
-                selected_mode = CONTROLLER;
-                break;
-            case CONTROLLER:
-                break;
-            case MENU:
-                selected_mode = CONTROLLER;
-                break;
-        }
-        buttons.wait_down_off();
-    }
-    if (buttons.o()) {
-        current_mode = selected_mode;
-        buttons.wait_o_off();
-        start_page();
-    }
-}
 
 void UIManager::display_values() {
     snprintf(report, sizeof(report),
@@ -190,12 +130,35 @@ void UIManager::commit() {
 void UIManager::clear() {
     display.clearBuffer();
 }
-int i=0;
+
 void UIManager::update() {
     update_inputs();
-    clear();
-    root.draw();
-    commit();
+    root.action();
+    bool distances_updated = distance.get_distances(false);
+
+    if (distances_updated) {
+        const bool *updates = distance.isUpdated();
+        if (updates[0]) {
+            auto ent = distance.m_left();
+            queue_add_blocking(&results_queue, &ent);
+        }
+
+        if (updates[1]) {
+            auto ent = distance.m_right();
+            queue_add_blocking(&results_queue, &ent);
+        }
+
+        distance.clear_update();
+    }
+
+    if (to_update || distances_updated) {
+        if (!power_save) {
+            clear();
+            root.draw();
+            commit();
+        }
+        to_update = false;
+    }
 }
 
 void UIManager::update_inputs() {
@@ -207,19 +170,32 @@ void UIManager::update_inputs() {
 }
 
 void UIManager::click() {
+    trigger_update();
     root.click();
 }
 
 void UIManager::down() {
+    trigger_update();
     root.move_right();
 }
 
 void UIManager::up() {
+    trigger_update();
     root.move_left();
 }
 
-UIManager::UIManager(DISPLAY_t &display, Distance &distance, Buttons &buttons) :
-display(display), distance(distance), buttons(buttons),root(display), main_menu(root), page_calibration(root), calibration(page_calibration)
-{
+void UIManager::low_power() {
+    trigger_update();
+    power_save=true;
+    display.setPowerSave(1);
+}
 
+void UIManager::awake() {
+    trigger_update();
+    power_save=false;
+    display.setPowerSave(0);
+}
+
+void UIManager::trigger_update() {
+    to_update = true;
 }

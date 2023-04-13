@@ -11,7 +11,6 @@
 #include "../include/distance.hpp"
 
 bool Distance::get_distances(bool blocking) {
-    bool update = false;
     uint8_t NewDataReady = 0;
     uint8_t NewDataReady2 = 0;
 
@@ -30,8 +29,11 @@ bool Distance::get_distances(bool blocking) {
 
         cd.VL53L4CD_GetResult(&results);
         if ((results.range_status == 0) & (results.distance_mm > 0)) {
-            distances[0] = results.distance_mm;
-            update = true;
+            if (results.distance_mm != old_distances[0]) {
+                distances[0] = results.distance_mm;
+                update[0] = true;
+                old_distances[0] = distances[0];
+            }
         }
     }
 
@@ -40,11 +42,14 @@ bool Distance::get_distances(bool blocking) {
 
         cd1.VL53L4CD_GetResult(&results2);
         if ((results2.range_status == 0) & (results2.distance_mm > 0)) {
-            distances[1] = results2.distance_mm;
-            update = true;
+            if (results2.distance_mm != old_distances[1]) {
+                distances[1] = results2.distance_mm;
+                update[1] = true;
+                old_distances[1] = distances[1];
+            }
         }
     }
-    return update;
+    return anyUpdated();
 }
 
 void Distance::init() {
@@ -56,10 +61,10 @@ void Distance::init() {
     cd1.InitSensor(0x12);
 
 
-    cd.VL53L4CD_SetRangeTiming(10, 0);
+    cd.VL53L4CD_SetRangeTiming(20, 0);
     cd.VL53L4CD_StartRanging();
 
-    cd1.VL53L4CD_SetRangeTiming(10, 0);
+    cd1.VL53L4CD_SetRangeTiming(20, 0);
     cd1.VL53L4CD_StartRanging();
 }
 

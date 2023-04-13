@@ -61,9 +61,23 @@ public:
 
     void set_right_far();
 
+    const bool *isUpdated() {
+        return update;
+    }
+
+    bool anyUpdated() {
+        return update[0] || update[1];
+    }
+
+    void clear_update() {
+        update[0] = false;
+        update[1] = false;
+    }
 private:
     VL53L4CD &cd, &cd1;
     uint16_t distances[2]{0, 0};
+    uint16_t old_distances[2]{0, 0};
+    bool update[2] = {true};
 
     midi_event_t m_any(uint16_t, sensor_settings&);
 

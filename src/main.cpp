@@ -30,13 +30,13 @@ VL53L4CD sensor_vl53l4cd_sat(&Wire1, PIN_DETECTOR_LEFT);
 VL53L4CD sensor_vl53l4cd_sat2(&Wire1, PIN_DETECTOR_RIGHT);
 Distance distance(sensor_vl53l4cd_sat, sensor_vl53l4cd_sat2);
 Buttons buttons;
-UIManager ui(reinterpret_cast<DISPLAY_t &> (display), distance, buttons);
+UIManager ui_manager(reinterpret_cast<DISPLAY_t &> (display), distance, buttons);
 
 queue_t results_queue;
 
 void setup() {
     buttons.init();
-    ui.init();
+    ui_manager.init();
 
     queue_init(&results_queue, sizeof(midi_event_t), 8);
 
@@ -71,20 +71,5 @@ void loop1() {
 }
 
 void loop() {
-    ui.update();
-    /*buttons.read();
-    bool active = (ui.selected_mode == ui.current_mode) && (ui.selected_mode != MENU);
-    if (ui.current_mode == MENU)
-        ui.menu();
-
-    switch (ui.selected_mode) {
-        case CALIBRATION:
-            calibration(active);
-            break;
-        case CONTROLLER:
-            controller(active);
-            break;
-        case MENU:
-            break;
-    }*/
+    ui_manager.update();
 }

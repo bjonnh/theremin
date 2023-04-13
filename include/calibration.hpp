@@ -30,11 +30,10 @@ namespace UI::Widgets {
 
         bool rightAction() override;
 
-        bool active;
+        void action() override;
+
+        void set_state(calibration_state new_state);
     };
 }
-
-
-void calibration(bool b);
 
 #endif //THEREMIN_RP2040_CALIBRATION_HPP

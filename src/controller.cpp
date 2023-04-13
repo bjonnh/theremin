@@ -9,85 +9,113 @@
 //
 
 
-#include "button.hpp"
 #include "uimanager.hpp"
+#include "controller.hpp"
+#include "distance.hpp"
 
 extern DISPLAY_t display;
-extern Buttons buttons;
 extern Distance distance;
-extern UIManager ui;
-
-extern queue_t results_queue;
+extern UIManager ui_manager;
 
 uint32_t count = 0;
+uint32_t COUNT_LIMIT = 300;
 
-uint32_t COUNT_LIMIT = 1000;
+namespace UI::Widgets {
+    template
+    class ControllerWidget<DISPLAY_t>;
 
-void controller(bool active) {
-    static bool low_latency = false;
-    static uint16_t old_distances[2]{0, 0};
-    if (active) {
-        if (buttons.o()) {
-            if (low_latency) {
-                low_latency = false;
-                ui.buttons.wait_o_off();
-                return;
-            }
-            buttons.wait_o_off();
-            ui.set_current_mode(MENU);
-            return;
+    template<typename D>
+    bool ControllerWidget<D>::leftAction() { // left is up
+        if (!this->focus) return false;
+        switch (state) {
+            case NORMAL:
+                break;
+            case LOW_LATENCY:
+                ui_manager.awake();
+                set_state(NORMAL);
+                break;
         }
-        if (buttons.up()) { // UP
-            if (low_latency) {
-                low_latency = false;
-                ui.buttons.wait_up_off();
-                return;
-            }
-            low_latency = true;
-            count = 0;
-            ui.start_page();
-            display.print("\nLow latency\n");
-            display.print("Display will turn off\n");
-            //display.setTextSize(2);
-            display.print("Press any \nto revive");
-            ui.commit();
-            buttons.wait_up_off();
-            return;
-        }
-        if (buttons.down()) {
-            if (low_latency) {
-                low_latency = false;
-                ui.buttons.wait_down_off();
-                return;
-            }
-            low_latency = false;
-            buttons.wait_up_off();
-            return;
-        }
-    }
-    if (low_latency && (count++ >= COUNT_LIMIT)) {
-        ui.clear();
-        ui.commit();
+        return true;
     }
 
-    bool update = distance.get_distances(true);
-
-    if (update) {
-        if (!low_latency) {
-            if (active) ui.start_page();
-            ui.display_values_giant();
-            ui.commit();
+    template<typename D>
+    bool ControllerWidget<D>::rightAction() { // right is down
+        if (!this->focus) return false;
+        switch (state) {
+            case NORMAL:
+                set_state(LOW_LATENCY);
+                break;
+            case LOW_LATENCY:
+                set_state(NORMAL);
+                break;
         }
-        if (distance.left() != old_distances[0]) {
-            auto ent = distance.m_left();
-            queue_add_blocking(&results_queue, &ent);
-            old_distances[0] = distance.left();
-        }
+        return true;
+    }
 
-        if (distance.right() != old_distances[1]) {
-            auto ent = distance.m_right();
-            queue_add_blocking(&results_queue, &ent);
-            old_distances[0] = distance.right();
+    template<typename D>
+    bool ControllerWidget<D>::clickAction() {
+        if (!this->focus) return false;
+        switch (state) {
+            case NORMAL:
+                this->setFocus(false);
+                this->exit();
+                ui_manager.buttons.wait_all_off();
+                break;
+            case LOW_LATENCY:
+                set_state(NORMAL);
+                break;
+        }
+        return true;
+    }
+
+    template<typename D>
+    void ControllerWidget<D>::action() {
+        switch(state) {
+            case NORMAL: {
+                break;
+            }
+            case LOW_LATENCY:
+                if (count < COUNT_LIMIT) {
+                    count++;
+                } else if (count == COUNT_LIMIT) {
+                    ui_manager.low_power();
+                }
+                break;
+        }
+    }
+
+    template<typename D>
+    void ControllerWidget<D>::set_state(controller_state new_state) {
+        if (new_state==state) return;
+
+        switch(new_state) {
+            case NORMAL:
+                ui_manager.awake();
+                break;
+            case LOW_LATENCY:
+                count = 0;
+                break;
+        }
+        state = new_state;
+    }
+
+    template<typename D>
+    void ControllerWidget<D>::draw() {
+
+        switch (state) {
+            case LOW_LATENCY: {
+                display.setCursor(0,16);
+                display.print("       Low latency");
+                display.setCursor(0,24);
+                display.print("Display will turn off");
+                //display.setTextSize(2);
+                display.setCursor(0,36);
+                display.print("Press any key to revive");
+            }
+                break;
+            case NORMAL:
+                ui_manager.display_values_giant();
+                break;
         }
     }
 }

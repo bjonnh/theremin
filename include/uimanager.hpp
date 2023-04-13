@@ -13,12 +13,12 @@
 
 #include "U8g2lib.h"
 #include "distance.hpp"
-#include "modes.hpp"
 #include "button.hpp"
 #include "ui/root.hpp"
 #include "ui/horizontalmenu.hpp"
 #include "calibration.hpp"
 #include "ui/page.hpp"
+#include "controller.hpp"
 
 typedef U8G2 DISPLAY_t;
 
@@ -34,15 +34,6 @@ public:
 
     void display_values_giant();
 
-    mode current_mode = MENU;
-    mode selected_mode = CALIBRATION;
-
-    void set_current_mode(mode mode1);
-
-    void start_page();
-
-    void menu();
-
     Buttons &buttons;
 
     void commit();
@@ -51,11 +42,19 @@ public:
 
     void update();
 
+    void low_power();
+
+    void awake();
 
     UI::Widgets::Root<DISPLAY_t> root;
     UI::Widgets::Horizontal_menu<DISPLAY_t> main_menu;
     UI::Widgets::Page<DISPLAY_t> page_calibration;
     UI::Widgets::CalibrationWidget<DISPLAY_t> calibration;
+    UI::Widgets::Page<DISPLAY_t> page_controller;
+    UI::Widgets::ControllerWidget<DISPLAY_t> controller;
+
+    void trigger_update();
+
 private:
     DISPLAY_t &display;
     char report[64]{0};
@@ -70,6 +69,9 @@ private:
     void down();
 
     void up();
+
+    bool power_save = false;
+    bool to_update = true;
 };
 
 

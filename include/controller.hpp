@@ -11,6 +11,31 @@
 #ifndef THEREMIN_RP2040_CONTROLLER_HPP
 #define THEREMIN_RP2040_CONTROLLER_HPP
 
-void controller(bool b);
+#include "ui/widget.hpp"
 
+namespace UI::Widgets {
+    template<typename D>
+    class ControllerWidget : public UI::Widget<D> {
+        enum controller_state {
+            NORMAL, LOW_LATENCY
+        };
+        controller_state state = NORMAL;
+
+        bool low_latency = false;
+        uint16_t old_distances[2]{0, 0};
+    public:
+        explicit ControllerWidget(Widget<D> &parent) : Widget<D>(parent) {}
+        void draw() override;
+
+        bool clickAction() override;
+
+        bool leftAction() override;
+
+        bool rightAction() override;
+
+        void action() override;
+
+        void set_state(controller_state state);
+    };
+}
 #endif //THEREMIN_RP2040_CONTROLLER_HPP
