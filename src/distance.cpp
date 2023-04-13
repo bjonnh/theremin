@@ -61,10 +61,10 @@ void Distance::init() {
     cd1.InitSensor(0x12);
 
 
-    cd.VL53L4CD_SetRangeTiming(20, 0);
+    cd.VL53L4CD_SetRangeTiming(5, 0);
     cd.VL53L4CD_StartRanging();
 
-    cd1.VL53L4CD_SetRangeTiming(20, 0);
+    cd1.VL53L4CD_SetRangeTiming(5, 0);
     cd1.VL53L4CD_StartRanging();
 }
 
