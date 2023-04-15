@@ -1,0 +1,3 @@
+[submodule "lib/din-ui"]
+	path = lib/din-ui
+	url = git@github.com-bjonnh:bjonnh/din-ui.git
