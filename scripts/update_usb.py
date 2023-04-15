@@ -12,6 +12,8 @@ Import("env")
 
 board_config = env.BoardConfig()
 
-# should be array of VID:PID pairs
 board_config.update("build.usb_product", "Theremin")
 board_config.update("name", "Theremin")
+board_config.update("build.hwids", [
+    ["0xCAFE", "0x0243"]
+])

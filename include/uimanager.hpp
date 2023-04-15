@@ -24,7 +24,7 @@ typedef U8G2 DISPLAY_t;
 
 class UIManager {
 public:
-    explicit UIManager(DISPLAY_t &display, Distance &distance, Buttons &buttons);;
+    explicit UIManager(DISPLAY_t &display, Distance &distance);
 
     void init();
 
@@ -33,8 +33,6 @@ public:
     void display_value(size_t index);
 
     void display_values_giant();
-
-    Buttons &buttons;
 
     void commit();
 
@@ -57,10 +55,10 @@ public:
 
 private:
     DISPLAY_t &display;
-    char report[64]{0};
+    Buttons buttons;
     Distance &distance;
 
-
+    char report[64]{0};
 
     void update_inputs();
 
@@ -72,7 +70,10 @@ private:
 
     bool power_save = false;
     bool to_update = true;
-};
 
+    void largeFont();
+
+    void normalFont();
+};
 
 #endif //THEREMIN_RP2040_UIMANAGER_HPP

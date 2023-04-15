@@ -13,9 +13,8 @@
 extern UIManager ui_manager;
 extern queue_t results_queue;
 
-UIManager::UIManager(DISPLAY_t &display, Distance &distance, Buttons &buttons) :
+UIManager::UIManager(DISPLAY_t &display, Distance &distance) :
         display(display), distance(distance),
-        buttons(buttons),
         root(display),
         main_menu(root),
         page_calibration(root), calibration(page_calibration),
@@ -40,6 +39,7 @@ void re_enter_menu() {
 }
 
 void UIManager::init() {
+    buttons.init();
     display.setBusClock(800000);
     display.begin();
     display.sendF("ca", 0x81, 0x4f);
@@ -49,7 +49,7 @@ void UIManager::init() {
     display.setContrast(180);  // This is extremely important
     display.setFontMode(0);
     display.setDrawColor(1);
-    display.setFont(u8g2_font_5x8_mr);
+    normalFont();
     display.setCursor(0, 8);
     display.print("Booting");
     display.sendBuffer();
@@ -57,8 +57,8 @@ void UIManager::init() {
     root.setVisible(true);
     main_menu.setVisible(true);
 
-    main_menu.addItem((char *) "Ctrl");
     main_menu.addItem((char *) "Calib");
+    main_menu.addItem((char *) "Ctrl");
     main_menu.addItem((char *) "Set");
     main_menu.onHighlightedCall(&set_current_position);
     main_menu.onSelectedCall(&enter_page);
@@ -91,11 +91,13 @@ void UIManager::display_value(size_t index) {
 }
 
 void UIManager::display_values_giant() {
-    snprintf(report, sizeof(report), "<%3u\n\n      %3u>", distance.c_left(), distance.c_right());
-    //display.setTextSize(2);
-    display.setCursor(0, 16);
-    display.print(report);
-    //display.setTextSize(1);
+
+    largeFont();
+    display.setCursor(8, 25);
+    display.print(distance.c_left());
+    display.setCursor(72, 52);
+    display.print(distance.c_right());
+    normalFont();
     display.setCursor(90, 16);
     if (distance.left_calibration.mode == PITCH_BEND) {
         display.print("PITCH");
@@ -119,8 +121,8 @@ void UIManager::display_values_giant() {
     display.setCursor(0, 54);
     snprintf(report, sizeof(report), "Ch %u", distance.right_calibration.channel);
     display.print(report);
-    display.drawHLine(0, 9, 128);
-    display.drawHLine(0, 40, 128);
+    display.drawHLine(0, 8, 128);
+    display.drawHLine(0, 36, 128);
 }
 
 void UIManager::commit() {
@@ -198,4 +200,12 @@ void UIManager::awake() {
 
 void UIManager::trigger_update() {
     to_update = true;
+}
+
+void UIManager::largeFont() {
+    display.setFont(u8g2_font_10x20_tn);
+}
+
+void UIManager::normalFont() {
+    display.setFont(u8g2_font_5x8_mr);
 }

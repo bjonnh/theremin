@@ -39,7 +39,6 @@ namespace UI::Widgets {
                 break;
             case DONE:
             case START:
-                ui_manager.buttons.wait_all_off();
                 set_state(START);
                 break;
         }
@@ -64,7 +63,6 @@ namespace UI::Widgets {
                 break;
             case DONE:
             case START:
-                ui_manager.buttons.wait_all_off();
                 set_state(START);
                 break;
         }
@@ -84,7 +82,6 @@ namespace UI::Widgets {
             case FAR_RIGHT:
                 break;
             case DONE:
-                ui_manager.buttons.wait_all_off();
                 set_state(START);
                 break;
         }

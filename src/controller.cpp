@@ -59,7 +59,6 @@ namespace UI::Widgets {
             case NORMAL:
                 this->setFocus(false);
                 this->exit();
-                ui_manager.buttons.wait_all_off();
                 break;
             case LOW_LATENCY:
                 set_state(NORMAL);
