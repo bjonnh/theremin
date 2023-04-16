@@ -31,6 +31,7 @@ public:
     uint16_t c_right();
 
     midi_event_t m_left();
+
     midi_event_t m_right();
 
     struct sensor_settings {
@@ -48,7 +49,7 @@ public:
     static uint16_t map_distance(uint16_t d, sensor_settings &calib);
 
 
-    Distance(VL53L4CD& cd, VL53L4CD& cd1) : cd(cd), cd1(cd1) { }
+    Distance(VL53L4CD &&cd, VL53L4CD &&cd1) : cd(cd), cd1(cd1) {}
 
     sensor_settings left_calibration{20, 500, 0, 16383, 0, PITCH_BEND, 1, 1, false};
     sensor_settings right_calibration{20, 500, 0, 127, 0, CC, 1, 1, false};
@@ -61,26 +62,20 @@ public:
 
     void set_right_far();
 
-    const bool *isUpdated() {
-        return update;
-    }
-
     bool anyUpdated() {
         return update[0] || update[1];
     }
 
-    void clear_update() {
-        update[0] = false;
-        update[1] = false;
-    }
+    bool get_distance(uint8_t channel);
+
 private:
-    VL53L4CD &cd, &cd1;
+    VL53L4CD cd1;
+    VL53L4CD cd;
     uint16_t distances[2]{0, 0};
     uint16_t old_distances[2]{0, 0};
     bool update[2] = {true};
 
-    midi_event_t m_any(uint16_t, sensor_settings&);
-
+    midi_event_t m_any(uint16_t, sensor_settings &);
 };
 
 

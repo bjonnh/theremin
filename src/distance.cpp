@@ -10,6 +10,43 @@
 
 #include "../include/distance.hpp"
 
+/**
+ * Non blocking get distance
+ * @param channel
+ * @return
+ */
+bool Distance::get_distance(uint8_t channel) {
+    uint8_t NewDataReady = 0;
+    uint8_t status;
+
+    VL53L4CD *device;
+
+    if (channel == 1) {
+        device = &cd1;
+    } else {
+        device = &cd;
+    }
+
+    status = device->VL53L4CD_CheckForDataReady(&NewDataReady);
+    if (!NewDataReady) return false;
+
+    VL53L4CD_Result_t results;
+    if ((!status) && (NewDataReady != 0)) {
+        device->VL53L4CD_ClearInterrupt();
+
+        device->VL53L4CD_GetResult(&results);
+        if ((results.range_status == 0) & (results.distance_mm > 0)) {
+            if (results.distance_mm != old_distances[0]) {
+                distances[channel] = results.distance_mm;
+                update[channel] = true;
+                old_distances[channel] = distances[channel];
+            }
+        }
+    }
+
+    return update[channel];
+}
+
 bool Distance::get_distances(bool blocking) {
     uint8_t NewDataReady = 0;
     uint8_t NewDataReady2 = 0;

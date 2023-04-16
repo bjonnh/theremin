@@ -50,30 +50,26 @@ public:
     UI::Widgets::CalibrationWidget<DISPLAY_t> calibration;
     UI::Widgets::Page<DISPLAY_t> page_controller;
     UI::Widgets::ControllerWidget<DISPLAY_t> controller;
-
-    void trigger_update();
-
 private:
     DISPLAY_t &display;
-    Buttons buttons;
+    Buttons buttons {};
     Distance &distance;
 
     char report[64]{0};
 
     void update_inputs();
+    void trigger_update();
 
     void click();
 
     void down();
-
     void up();
+
+    void largeFont();
+    void normalFont();
 
     bool power_save = false;
     bool to_update = true;
-
-    void largeFont();
-
-    void normalFont();
 };
 
 #endif //THEREMIN_RP2040_UIMANAGER_HPP

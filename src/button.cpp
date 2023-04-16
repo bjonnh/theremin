@@ -8,15 +8,39 @@
 // THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#include <api/HardwareSPI.h>
+#include <api/ArduinoAPI.h>
 #include "button.hpp"
 #include "config.hpp"
 #include "hardware/gpio.h"
 
-void Buttons::read() {
+
+void Buttons::init() {
+    static Buttons *local_ref = this;
+    gpio_init(BTN_UP); gpio_set_dir(BTN_UP, GPIO_IN); gpio_pull_up(BTN_UP);
+    gpio_init(BTN_DOWN); gpio_set_dir(BTN_DOWN, GPIO_IN); gpio_pull_up(BTN_DOWN);
+    gpio_init(BTN_O); gpio_set_dir(BTN_O, GPIO_IN); gpio_pull_up(BTN_O);
+
     btn_up = gpio_get(BTN_UP);
     btn_o = gpio_get(BTN_O);
     btn_down = gpio_get(BTN_DOWN);
+    // Using a lambda here to not keep references for stuff around
+    gpio_set_irq_enabled_with_callback(BTN_UP, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true,
+                                       +[](uint gpio, uint32_t events) -> void {
+                                           bool new_value = (events & GPIO_IRQ_EDGE_RISE);
+                                           switch (gpio) {
+                                               case BTN_UP:
+                                                   local_ref->btn_up = new_value;
+                                                   break;
+                                               case BTN_DOWN:
+                                                   local_ref->btn_down = new_value;
+                                                   break;
+                                               case BTN_O:
+                                                   local_ref->btn_o = new_value;
+                                                   break;
+                                           }
+                                       });
+    gpio_set_irq_enabled(BTN_DOWN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+    gpio_set_irq_enabled(BTN_O, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
 }
 
 bool Buttons::up() const {
@@ -29,41 +53,4 @@ bool Buttons::down() const {
 
 bool Buttons::o() const {
     return !btn_o;
-}
-
-void Buttons::wait_up_off() {
-    while (btn_up == 0) {
-        delay(5);
-        read();
-    }
-}
-
-void Buttons::wait_down_off() {
-    while (btn_down == 0) {
-        delay(5);
-        read();
-    }
-}
-
-void Buttons::wait_o_off() {
-    while (btn_o == 0) {
-        delay(5);
-        read();
-    }
-}
-
-void Buttons::init() {
-    gpio_init(BTN_UP);
-    gpio_set_dir(BTN_UP, GPIO_IN);
-    gpio_init(BTN_DOWN);
-    gpio_set_dir(BTN_DOWN, GPIO_IN);
-    gpio_init(BTN_O);
-    gpio_set_dir(BTN_O, GPIO_IN);
-    gpio_pull_up(BTN_UP);
-    gpio_pull_up(BTN_DOWN);
-    gpio_pull_up(BTN_O);
-}
-
-void Buttons::wait_all_off() {
-    while (!btn_o || !btn_up || !btn_down) { read(); }
 }

@@ -18,4 +18,7 @@
 #define BTN_O 8
 #define BTN_DOWN 9
 
+// Number of display cycles to debounce for (not ideal but fast with the interrupts)
+#define DEBOUNCING_CYCLES 10
+
 #endif

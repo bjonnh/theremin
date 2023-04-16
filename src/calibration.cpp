@@ -90,12 +90,11 @@ namespace UI::Widgets {
 
     template<typename D>
     void CalibrationWidget<D>::set_state(calibration_state new_state) {
-        if (new_state==START) {
-            state = new_state;
+        state = new_state;
+        if (new_state == START) {
             this->setFocus(false);
             this->exit();
         }
-        state = new_state;
     }
 
     template<typename D>
@@ -112,31 +111,26 @@ namespace UI::Widgets {
                 break;
             case CLOSE_LEFT:
                 display.setCursor(0, 16);
-                //display.setTextSize(2);
                 display.print("Get Close\nPress \\/\n");
                 ui_manager.display_value(0);
                 break;
             case FAR_LEFT:
                 display.setCursor(0, 16);
-                //display.setTextSize(2);
                 display.print("Get Far\nPress /\\\n");
                 ui_manager.display_value(0);
                 break;
             case CLOSE_RIGHT:
                 display.setCursor(0, 16);
-                //display.setTextSize(2);
                 display.print("Get Close\nPress \\/\n");
                 ui_manager.display_value(1);
                 break;
             case FAR_RIGHT:
                 display.setCursor(0, 16);
-                //display.setTextSize(2);
                 display.print("Get Far\nPress /\\\n");
                 ui_manager.display_value(1);
                 break;
             case DONE:
                 display.setCursor(0, 16);
-                //display.setTextSize(2);
                 display.print("Calibration done. Press O");
                 break;
         }

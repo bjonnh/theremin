@@ -25,6 +25,7 @@ namespace UI::Widgets {
         uint16_t old_distances[2]{0, 0};
     public:
         explicit ControllerWidget(Widget<D> &parent) : Widget<D>(parent) {}
+
         void draw() override;
 
         bool clickAction() override;

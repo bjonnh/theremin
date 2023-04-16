@@ -9,6 +9,7 @@
 //
 
 #include "../include/uimanager.hpp"
+#include "config.hpp"
 
 extern UIManager ui_manager;
 extern queue_t results_queue;
@@ -18,8 +19,7 @@ UIManager::UIManager(DISPLAY_t &display, Distance &distance) :
         root(display),
         main_menu(root),
         page_calibration(root), calibration(page_calibration),
-        page_controller(root), controller(page_controller)
-{}
+        page_controller(root), controller(page_controller) {}
 
 void set_current_position(uint8_t position) {
     ui_manager.page_calibration.setVisible(position == 0);
@@ -40,13 +40,13 @@ void re_enter_menu() {
 
 void UIManager::init() {
     buttons.init();
-    display.setBusClock(800000);
+    display.setBusClock(1000000);
     display.begin();
     display.sendF("ca", 0x81, 0x4f);
     display.sendF("ca", 0xa8, 0x7f);
     display.clearBuffer();
-    display.setPowerSave(0);
-    display.setContrast(180);  // This is extremely important
+    awake();
+    display.setContrast(64);  // reduce burning for dev, but should increase in prod
     display.setFontMode(0);
     display.setDrawColor(1);
     normalFont();
@@ -66,7 +66,6 @@ void UIManager::init() {
     main_menu.set_highlighted_item_to(0);
     main_menu.set_selected_item_to(0);
 
-
     calibration.onExitCall(&re_enter_menu);
     controller.onExitCall(&re_enter_menu);
 }
@@ -76,22 +75,18 @@ void UIManager::display_values() {
     snprintf(report, sizeof(report),
              "< %4u\n  %4u >", distance.c_left(), distance.c_right()
     );
-
-    //display.setTextSize(2);
     display.setCursor(0, 24);
     display.print(report);
 }
 
 void UIManager::display_value(size_t index) {
     snprintf(report, sizeof(report), "%s%3u mm%s", index == 0 ? "< " : "  ",
-             index==0 ? distance.left() : distance.right(), index == 1 ? " >" : "");
-    //display.setTextSize(2);
+             index == 0 ? distance.left() : distance.right(), index == 1 ? " >" : "");
     display.setCursor(0, 48);
     display.print(report);
 }
 
 void UIManager::display_values_giant() {
-
     largeFont();
     display.setCursor(8, 25);
     display.print(distance.c_left());
@@ -134,23 +129,21 @@ void UIManager::clear() {
 }
 
 void UIManager::update() {
+    bool distances_updated = false;
+
     update_inputs();
     root.action();
-    bool distances_updated = distance.get_distances(false);
 
-    if (distances_updated) {
-        const bool *updates = distance.isUpdated();
-        if (updates[0]) {
-            auto ent = distance.m_left();
-            queue_add_blocking(&results_queue, &ent);
-        }
+    if (distance.get_distance(0)) {
+        auto ent = distance.m_left();
+        queue_add_blocking(&results_queue, &ent);
+        distances_updated = true;
+    }
 
-        if (updates[1]) {
-            auto ent = distance.m_right();
-            queue_add_blocking(&results_queue, &ent);
-        }
-
-        distance.clear_update();
+    if (distance.get_distance(1)) {
+        auto ent = distance.m_right();
+        queue_add_blocking(&results_queue, &ent);
+        distances_updated = true;
     }
 
     if (to_update || distances_updated) {
@@ -164,11 +157,24 @@ void UIManager::update() {
 }
 
 void UIManager::update_inputs() {
-    buttons.read();
-    if (buttons.o()) click();
-    else if (buttons.down()) down();
-    else if (buttons.up()) up();
-    buttons.wait_all_off();
+    static bool was_reset = true;
+    static uint8_t counts = 0;
+    if (was_reset) {
+        if (buttons.o()) click();
+        else if (buttons.down()) down();
+        else if (buttons.up()) up();
+    }
+    // If a button is pressed we reset the counter
+    if (buttons.o() || buttons.down() || buttons.up()) {
+        counts = 0;
+        was_reset = false;
+    } else if (counts++ >= DEBOUNCING_CYCLES) { // None of the buttons are clicked
+        was_reset = true;
+    }
+}
+
+void UIManager::trigger_update() {
+    to_update = true;
 }
 
 void UIManager::click() {
@@ -188,18 +194,14 @@ void UIManager::up() {
 
 void UIManager::low_power() {
     trigger_update();
-    power_save=true;
+    power_save = true;
     display.setPowerSave(1);
 }
 
 void UIManager::awake() {
     trigger_update();
-    power_save=false;
+    power_save = false;
     display.setPowerSave(0);
-}
-
-void UIManager::trigger_update() {
-    to_update = true;
 }
 
 void UIManager::largeFont() {

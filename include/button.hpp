@@ -14,27 +14,19 @@
 
 class Buttons {
 public:
-    void read();
-
     [[nodiscard]] bool up() const;
+
     [[nodiscard]] bool down() const;
+
     [[nodiscard]] bool o() const;
 
+    void init();
 
-    void wait_up_off();
-    void wait_down_off();
-    void wait_o_off();
-
-    static void init();
-
-    void wait_all_off();
-
+    bool updated = true;
 private:
-    bool btn_up;
-    bool btn_o;
-    bool btn_down;
-
-
+    bool btn_up = true;
+    bool btn_down = true;
+    bool btn_o = true;
 };
 
 

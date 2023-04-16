@@ -17,8 +17,9 @@ extern DISPLAY_t display;
 extern Distance distance;
 extern UIManager ui_manager;
 
-uint32_t count = 0;
-uint32_t COUNT_LIMIT = 300;
+#define COUNT_LIMIT 600
+
+static uint32_t count = 0;
 
 namespace UI::Widgets {
     template
@@ -69,10 +70,9 @@ namespace UI::Widgets {
 
     template<typename D>
     void ControllerWidget<D>::action() {
-        switch(state) {
-            case NORMAL: {
+        switch (state) {
+            case NORMAL:
                 break;
-            }
             case LOW_LATENCY:
                 if (count < COUNT_LIMIT) {
                     count++;
@@ -85,9 +85,11 @@ namespace UI::Widgets {
 
     template<typename D>
     void ControllerWidget<D>::set_state(controller_state new_state) {
-        if (new_state==state) return;
+        if (new_state == state) {
+            return;
+        }
 
-        switch(new_state) {
+        switch (new_state) {
             case NORMAL:
                 ui_manager.awake();
                 break;
@@ -100,18 +102,16 @@ namespace UI::Widgets {
 
     template<typename D>
     void ControllerWidget<D>::draw() {
-
         switch (state) {
             case LOW_LATENCY: {
-                display.setCursor(0,16);
+                display.setCursor(0, 16);
                 display.print("       Low latency");
-                display.setCursor(0,24);
+                display.setCursor(0, 24);
                 display.print("Display will turn off");
-                //display.setTextSize(2);
-                display.setCursor(0,36);
+                display.setCursor(0, 36);
                 display.print("Press any key to revive");
-            }
                 break;
+            }
             case NORMAL:
                 ui_manager.display_values_giant();
                 break;
