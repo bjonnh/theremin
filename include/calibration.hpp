@@ -22,6 +22,7 @@ namespace UI::Widgets {
         calibration_state state = START;
     public:
         explicit CalibrationWidget(Widget<D> &parent) : Widget<D>(parent) {}
+
         void draw() override;
 
         bool clickAction() override;
