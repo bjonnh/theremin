@@ -8,19 +8,26 @@
 // THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+//
+// Created by bjo on 4/16/23.
+//
 
-#define VERSION "0.01"
+#ifndef THEREMIN_RP2040_SETTINGSPAGE_HPP
+#define THEREMIN_RP2040_SETTINGSPAGE_HPP
 
-#define PIN_DETECTOR_LEFT 18
-#define PIN_DETECTOR_RIGHT 19
+#include "ui/widget.hpp"
+#include "ui/page.hpp"
+#include "settings.hpp"
 
-#define BTN_UP 7
-#define BTN_O 8
-#define BTN_DOWN 9
+namespace UI::Widgets {
+    template<typename D>
+    class SettingsPage : public UI::Widgets::Page<D> {
+    public:
+        explicit SettingsPage(Widget<D> &parent);
 
-// Number of display cycles to debounce for (not ideal but fast with the interrupts)
-#define DEBOUNCING_CYCLES 10
+    private:
+        SettingsWidget<D> settings;
+    };
+}
 
-#endif
+#endif //THEREMIN_RP2040_SETTINGSPAGE_HPP

@@ -121,7 +121,7 @@ uint16_t Distance::c_right() {
     return map_distance(distances[1], right_calibration);
 }
 
-uint16_t Distance::map_distance(uint16_t d, Distance::sensor_settings &calib) {
+uint16_t Distance::map_distance(uint16_t d, sensor_settings &calib) {
     if (calib.inverted)
         return constrain(map(d, calib.far, calib.close, calib.min, calib.max), calib.min, calib.max);
     else
@@ -136,7 +136,7 @@ midi_event_t Distance::m_right() {
     return m_any(c_right(), right_calibration);
 }
 
-midi_event_t Distance::m_any(uint16_t distance, Distance::sensor_settings &cal) {
+midi_event_t Distance::m_any(uint16_t distance, sensor_settings &cal) {
     midi_event_t entry;
     entry.channel = cal.channel;
     entry.controller = cal.controller;

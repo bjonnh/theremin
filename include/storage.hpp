@@ -16,32 +16,80 @@
 #define THEREMIN_RP2040_STORAGE_HPP
 
 #include <string>
+#include <sstream>
 #include "LittleFS.h"
+#include "distance.hpp"
+#include "config.hpp"
+
+
 
 class Storage {
 
 public:
+    explicit Storage(Distance &distance): distance(distance) {};
+
     void init() {
         cfg.setAutoFormat(false);
         LittleFS.setConfig(cfg);
-        littlefs_ok = LittleFS.begin();
-        //LittleFS.format();
-        //LittleFS.mkdir("proutix");
+        ok = LittleFS.begin();
+        if (!ok) {
+            reset();
+        }
+    }
 
+    void reset() {
+        LittleFS.format();
+        write_config();
+        ok=true;
+    }
+
+    void write_config() {
+        std::stringstream buffer;
+        buffer << "version=" << VERSION << "\n";
+        buffer << convert_calibration(0, distance.left_calibration);
+        buffer << convert_calibration(1, distance.right_calibration);
+        auto file = LittleFS.open("config.txt", "w");
+        file.write(buffer.str().c_str());
+        file.close();
+    }
+
+    std::string convert_calibration(uint8_t id, sensor_settings s) {
+        std::stringstream buffer;
+        //uint16_t close = 20;
+        //    uint16_t far = 500;
+        //    uint16_t min = 0;
+        //    uint16_t max = 127;
+        //    uint16_t smooth = 0;
+        //    midi_mode mode = CC;
+        //    uint8_t channel = 1;
+        //    uint8_t controller = 1;
+        //    bool inverted = false;
+        buffer << "[sensor_" << id << "]" << std::endl;
+        buffer << "close=" << s.close << std::endl;
+        buffer << "far=" << s.far << std::endl;
+        buffer << "min=" << s.min << std::endl;
+        buffer << "smooth=" << s.smooth << std::endl;
+        buffer << "mode=" << s.mode << std::endl;
+        buffer << "channel=" << s.channel << std::endl;
+        buffer << "controller=" << s.controller << std::endl;
+        buffer << "inverted=" << s.inverted << std::endl;
+        return buffer.str();
     }
 
     std::basic_string<char> get_dirs() {
         std::string foo;
-        Dir dir = LittleFS.openDir("/");
-        while (dir.next()) {
-            foo.append(dir.fileName().c_str());
-            foo.append(" ");
+        if (LittleFS.exists("config.txt")) {
+            auto file = LittleFS.open("config.txt", "r");
+            foo.append(file.readString().c_str());
+            file.close();
         }
         return foo;
     }
-    bool littlefs_ok=false;
+
+    bool ok = false;
 private:
     LittleFSConfig cfg;
+    Distance distance;
 };
 
 

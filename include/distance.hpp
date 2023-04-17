@@ -16,6 +16,18 @@
 #include "vl53l4cd_class.h"
 #include "midi.hpp"
 
+struct sensor_settings {
+    uint16_t close = 20;
+    uint16_t far = 500;
+    uint16_t min = 0;
+    uint16_t max = 127;
+    uint16_t smooth = 0;
+    midi_mode mode = CC;
+    uint8_t channel = 1;
+    uint8_t controller = 1;
+    bool inverted = false;
+};
+
 class Distance {
 public:
     void init();
@@ -33,18 +45,6 @@ public:
     midi_event_t m_left();
 
     midi_event_t m_right();
-
-    struct sensor_settings {
-        uint16_t close = 20;
-        uint16_t far = 500;
-        uint16_t min = 0;
-        uint16_t max = 127;
-        uint16_t smooth = 0;
-        midi_mode mode = CC;
-        uint8_t channel = 1;
-        uint8_t controller = 1;
-        bool inverted = false;
-    };
 
     static uint16_t map_distance(uint16_t d, sensor_settings &calib);
 

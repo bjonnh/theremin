@@ -20,6 +20,7 @@
 #include "ui/page.hpp"
 #include "controller.hpp"
 #include "settings.hpp"
+#include "settingspage.hpp"
 
 typedef U8G2 DISPLAY_t;
 
@@ -51,8 +52,7 @@ public:
     UI::Widgets::CalibrationWidget<DISPLAY_t> calibration;
     UI::Widgets::Page<DISPLAY_t> page_controller;
     UI::Widgets::ControllerWidget<DISPLAY_t> controller;
-    UI::Widgets::Page<DISPLAY_t> page_settings;
-    UI::Widgets::SettingsWidget<DISPLAY_t> settings;
+    UI::Widgets::SettingsPage<DISPLAY_t> page_settings;
 private:
     DISPLAY_t &display;
     Buttons buttons {};

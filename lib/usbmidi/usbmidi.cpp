@@ -11,8 +11,7 @@
 #include "usbmidi.hpp"
 
 void UsbMidi::init() {
-    TinyUSB_Device_Init(0);
-    TinyUSBDevice.setID(0xF055, 0x8102);
+
 }
 
 bool UsbMidi::active() {

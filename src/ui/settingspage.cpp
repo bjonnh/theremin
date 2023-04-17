@@ -8,19 +8,22 @@
 // THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+//
+// Created by bjo on 4/16/23.
+//
 
-#define VERSION "0.01"
+#include "../../include/ui/settingspage.hpp"
+#include "U8g2lib.h"
+#include "ui/uimanager.hpp"
 
-#define PIN_DETECTOR_LEFT 18
-#define PIN_DETECTOR_RIGHT 19
 
-#define BTN_UP 7
-#define BTN_O 8
-#define BTN_DOWN 9
+namespace UI::Widgets {
+    template
+    class SettingsPage<DISPLAY_t>;  // TODO Put that in a u8g2 specific place
 
-// Number of display cycles to debounce for (not ideal but fast with the interrupts)
-#define DEBOUNCING_CYCLES 10
-
-#endif
+    template<typename D>
+    SettingsPage<D>::SettingsPage(Widget<D> &parent) : Page<D>(parent), settings(SettingsWidget<D>(*this)) {
+        static SettingsPage *local_ref = this;
+        settings.onExitCall([this]() -> void { this->exit(); }); // I hate that
+    }
+}

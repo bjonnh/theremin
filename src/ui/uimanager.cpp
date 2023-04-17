@@ -8,7 +8,7 @@
 // THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#include "../include/uimanager.hpp"
+#include "ui/uimanager.hpp"
 #include "config.hpp"
 
 extern UIManager ui_manager;
@@ -20,7 +20,7 @@ UIManager::UIManager(DISPLAY_t &display, Distance &distance) :
         main_menu(root),
         page_calibration(root), calibration(page_calibration),
         page_controller(root), controller(page_controller),
-        page_settings(root), settings(page_settings) {}
+        page_settings(root) {}
 
 void set_current_position(uint8_t position) {
     ui_manager.page_calibration.setVisible(position == 0);
@@ -48,18 +48,23 @@ void UIManager::init() {
     display.begin();
     display.sendF("ca", 0x81, 0x4f);
     display.sendF("ca", 0xa8, 0x7f);
-    display.clearBuffer();
     awake();
     display.setContrast(64);  // reduce burning for dev, but should increase in prod
     display.setFontMode(0);
     display.setDrawColor(1);
     normalFont();
+    display.clearBuffer();
     display.setCursor(0, 8);
     display.print("Booting");
     display.sendBuffer();
 
     root.setVisible(true);
     main_menu.setVisible(true);
+
+    display.clearBuffer();
+    display.setCursor(0, 8);
+    display.print("Menu");
+    display.sendBuffer();
 
     main_menu.addItem((char *) "Calib");
     main_menu.addItem((char *) "Ctrl");
@@ -69,11 +74,10 @@ void UIManager::init() {
     re_enter_menu();
     main_menu.set_highlighted_item_to(0);
     main_menu.set_selected_item_to(0);
-
     calibration.onExitCall(&re_enter_menu);
     controller.onExitCall(&re_enter_menu);
+    page_settings.onExitCall(&re_enter_menu);
 }
-
 
 void UIManager::display_values() {
     snprintf(report, sizeof(report),
@@ -140,13 +144,13 @@ void UIManager::update() {
 
     if (distance.get_distance(0)) {
         auto ent = distance.m_left();
-        queue_add_blocking(&results_queue, &ent);
+        queue_try_add(&results_queue, &ent);
         distances_updated = true;
     }
 
     if (distance.get_distance(1)) {
         auto ent = distance.m_right();
-        queue_add_blocking(&results_queue, &ent);
+        queue_try_add(&results_queue, &ent);
         distances_updated = true;
     }
 

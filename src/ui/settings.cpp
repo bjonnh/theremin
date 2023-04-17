@@ -9,8 +9,8 @@
 //
 
 
-#include "uimanager.hpp"
-#include "settings.hpp"
+#include "ui/uimanager.hpp"
+#include "ui/settings.hpp"
 #include "storage.hpp"
 
 extern DISPLAY_t display;
@@ -30,6 +30,9 @@ namespace UI::Widgets {
     bool SettingsWidget<D>::leftAction() { // left is up
         if (!this->focus) return false;
         switch(state) {}
+        this->setFocus(false);
+        this->exit();
+
         return true;
     }
 
@@ -38,6 +41,9 @@ namespace UI::Widgets {
         if (!this->focus) return false;
         switch (state) {
         }
+        this->setFocus(false);
+        this->exit();
+
         return true;
     }
 
@@ -76,7 +82,7 @@ namespace UI::Widgets {
                 display.setCursor(0,16);
                 display.print(storage.get_dirs().c_str());
                 display.setCursor(0,24);
-                display.print(storage.littlefs_ok ? "Started" : "Unstarted");
+                display.println(storage.ok ? "Started" : "Unstarted");
                 break;
         }
     }

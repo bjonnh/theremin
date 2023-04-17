@@ -9,9 +9,9 @@
 //
 
 
-#include "calibration.hpp"
+#include "ui/calibration.hpp"
 #include "distance.hpp"
-#include "uimanager.hpp"
+#include "ui/uimanager.hpp"
 
 extern DISPLAY_t display;
 extern Distance distance;

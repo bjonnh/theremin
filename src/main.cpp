@@ -14,10 +14,10 @@
 #include "pico/util/queue.h"
 #include "config.hpp"
 #include "../lib/usbmidi/usbmidi.hpp"
-#include "calibration.hpp"
+#include "ui/calibration.hpp"
 #include "midi.hpp"
 #include "distance.hpp"
-#include "uimanager.hpp"
+#include "ui/uimanager.hpp"
 #include "U8g2lib.h"
 #include "storage.hpp"
 
@@ -28,23 +28,28 @@ VL53L4CD sensor_vl53l4cd_sat(&Wire1, PIN_DETECTOR_LEFT);
 VL53L4CD sensor_vl53l4cd_sat2(&Wire1, PIN_DETECTOR_RIGHT);
 Distance distance(std::move(sensor_vl53l4cd_sat), std::move(sensor_vl53l4cd_sat2));
 UIManager ui_manager(reinterpret_cast<DISPLAY_t &> (display), distance);
-Storage storage;
+Storage storage(distance);
 
 queue_t results_queue;
 
+UsbMidi usb_midi;
+
 void setup() {
+    Serial.begin(115200);
+    usb_midi.init();
+    Serial.println("Midi initialized");
     ui_manager.init();
+    Serial.println("Manager initialized");
     storage.init();
+    Serial.println("Storage initialized");
 
     queue_init(&results_queue, sizeof(midi_event_t), 8);
 
     distance.init();
+    Serial.println("Distance initialized");
 }
 
-UsbMidi usb_midi;
-
 void setup1() {
-    usb_midi.init();
     usb_midi(1).begin(MIDI_CHANNEL_OMNI);
 }
 

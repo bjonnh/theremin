@@ -9,8 +9,8 @@
 //
 
 
-#include "uimanager.hpp"
-#include "controller.hpp"
+#include "ui/uimanager.hpp"
+#include "ui/controller.hpp"
 #include "distance.hpp"
 
 extern DISPLAY_t display;
