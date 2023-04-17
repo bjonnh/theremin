@@ -19,22 +19,26 @@ UIManager::UIManager(DISPLAY_t &display, Distance &distance) :
         root(display),
         main_menu(root),
         page_calibration(root), calibration(page_calibration),
-        page_controller(root), controller(page_controller) {}
+        page_controller(root), controller(page_controller),
+        page_settings(root), settings(page_settings) {}
 
 void set_current_position(uint8_t position) {
     ui_manager.page_calibration.setVisible(position == 0);
     ui_manager.page_controller.setVisible(position == 1);
+    ui_manager.page_settings.setVisible(position == 2);
 }
 
 void enter_page(uint8_t position) {
     ui_manager.main_menu.setFocus(false);
     ui_manager.page_calibration.setFocus(position == 0);
     ui_manager.page_controller.setFocus(position == 1);
+    ui_manager.page_settings.setFocus(position == 2);
 }
 
 void re_enter_menu() {
     ui_manager.page_calibration.setFocus(false);
     ui_manager.page_controller.setFocus(false);
+    ui_manager.page_settings.setFocus(false);
     ui_manager.main_menu.setFocus(true);
 }
 

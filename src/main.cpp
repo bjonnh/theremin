@@ -19,6 +19,7 @@
 #include "distance.hpp"
 #include "uimanager.hpp"
 #include "U8g2lib.h"
+#include "storage.hpp"
 
 
 U8G2_SH1107_64X128_F_2ND_HW_I2C display(U8G2_R3);
@@ -27,11 +28,13 @@ VL53L4CD sensor_vl53l4cd_sat(&Wire1, PIN_DETECTOR_LEFT);
 VL53L4CD sensor_vl53l4cd_sat2(&Wire1, PIN_DETECTOR_RIGHT);
 Distance distance(std::move(sensor_vl53l4cd_sat), std::move(sensor_vl53l4cd_sat2));
 UIManager ui_manager(reinterpret_cast<DISPLAY_t &> (display), distance);
+Storage storage;
 
 queue_t results_queue;
 
 void setup() {
     ui_manager.init();
+    storage.init();
 
     queue_init(&results_queue, sizeof(midi_event_t), 8);
 
