@@ -32,8 +32,6 @@ class Distance {
 public:
     void init();
 
-    bool get_distances(bool blocking);
-
     uint16_t left();
 
     uint16_t right();
@@ -62,11 +60,9 @@ public:
 
     void set_right_far();
 
-    bool anyUpdated() {
-        return update[0] || update[1];
-    }
-
     bool get_distance(uint8_t channel);
+
+    void m_dist(midi_event_t &evt, int i);
 
 private:
     VL53L4CD cd1;
@@ -76,6 +72,8 @@ private:
     bool update[2] = {true};
 
     midi_event_t m_any(uint16_t, sensor_settings &);
+
+    midi_event_t m_any(midi_event_t &evt, uint16_t distance, sensor_settings &cal);
 };
 
 

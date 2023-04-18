@@ -141,15 +141,15 @@ void UIManager::update() {
 
     update_inputs();
     root.action();
-
+    midi_event_t ent;
     if (distance.get_distance(0)) {
-        auto ent = distance.m_left();
+        distance.m_dist(ent, 0);
         queue_try_add(&results_queue, &ent);
         distances_updated = true;
     }
 
     if (distance.get_distance(1)) {
-        auto ent = distance.m_right();
+        distance.m_dist(ent, 0);
         queue_try_add(&results_queue, &ent);
         distances_updated = true;
     }

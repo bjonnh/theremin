@@ -47,48 +47,6 @@ bool Distance::get_distance(uint8_t channel) {
     return update[channel];
 }
 
-bool Distance::get_distances(bool blocking) {
-    uint8_t NewDataReady = 0;
-    uint8_t NewDataReady2 = 0;
-
-    uint8_t status, status2;
-
-    VL53L4CD_Result_t results, results2;
-
-    do {
-        status = cd.VL53L4CD_CheckForDataReady(&NewDataReady);
-        status2 = cd1.VL53L4CD_CheckForDataReady(&NewDataReady2);
-    } while (!NewDataReady && !NewDataReady2 && blocking);
-
-
-    if ((!status) && (NewDataReady != 0)) {
-        cd.VL53L4CD_ClearInterrupt();
-
-        cd.VL53L4CD_GetResult(&results);
-        if ((results.range_status == 0) & (results.distance_mm > 0)) {
-            if (results.distance_mm != old_distances[0]) {
-                distances[0] = results.distance_mm;
-                update[0] = true;
-                old_distances[0] = distances[0];
-            }
-        }
-    }
-
-    if ((!status2) && (NewDataReady2 != 0)) {
-        cd1.VL53L4CD_ClearInterrupt();
-
-        cd1.VL53L4CD_GetResult(&results2);
-        if ((results2.range_status == 0) & (results2.distance_mm > 0)) {
-            if (results2.distance_mm != old_distances[1]) {
-                distances[1] = results2.distance_mm;
-                update[1] = true;
-                old_distances[1] = distances[1];
-            }
-        }
-    }
-    return anyUpdated();
-}
-
 void Distance::init() {
     cd.begin();
     cd.VL53L4CD_Off();
@@ -128,21 +86,12 @@ uint16_t Distance::map_distance(uint16_t d, sensor_settings &calib) {
         return constrain(map(d, calib.close, calib.far, calib.min, calib.max), calib.min, calib.max);
 }
 
-midi_event_t Distance::m_left() {
-    return m_any(c_left(), left_calibration);
-}
-
-midi_event_t Distance::m_right() {
-    return m_any(c_right(), right_calibration);
-}
-
-midi_event_t Distance::m_any(uint16_t distance, sensor_settings &cal) {
-    midi_event_t entry;
-    entry.channel = cal.channel;
-    entry.controller = cal.controller;
-    entry.mode = cal.mode;
-    entry.value = distance;
-    return entry;
+midi_event_t Distance::m_any(midi_event_t &evt, uint16_t distance, sensor_settings &cal) {
+    evt.channel = cal.channel;
+    evt.controller = cal.controller;
+    evt.mode = cal.mode;
+    evt.value = distance;
+    return evt;
 }
 
 void Distance::set_left_close() {
@@ -160,4 +109,12 @@ void Distance::set_right_close() {
 
 void Distance::set_right_far() {
     right_calibration.far = right();
+}
+
+void Distance::m_dist(midi_event_t &evt, int i) {
+    if (i==1) {
+        m_any(evt, c_right(), right_calibration);
+    } else {
+        m_any(evt, c_left(), left_calibration);
+    }
 }
