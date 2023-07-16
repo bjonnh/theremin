@@ -74,5 +74,4 @@ void loop1() {
 }
 
 void loop() {
-    ui_manager.update();
-}
+    ui_manager.update();}
