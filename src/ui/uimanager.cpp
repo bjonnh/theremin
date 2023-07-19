@@ -149,7 +149,7 @@ void UIManager::update() {
     }
 
     if (distance.get_distance(1)) {
-        distance.m_dist(ent, 0);
+        distance.m_dist(ent, 1);
         queue_try_add(&results_queue, &ent);
         distances_updated = true;
     }
